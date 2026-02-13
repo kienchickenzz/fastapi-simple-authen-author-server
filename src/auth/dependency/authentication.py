@@ -9,7 +9,7 @@ from src.base.dependency_injection import Injects
 from src.auth.dto.token_payload import TokenPayload
 from src.auth.service.token_service import TokenService
 from src.auth.database.repository.token_repository import TokenRepository
-from src.auth.repository.permission_repository import PermissionRepository
+from src.permission.database.repository.permission_repository import PermissionRepository
 from src.auth.exception.auth_exception import InvalidTokenException, ExpiredTokenException
 
 security = HTTPBearer()

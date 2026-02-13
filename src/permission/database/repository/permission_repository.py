@@ -1,6 +1,8 @@
 """
-Repository để query permissions của user từ database.
+Repository để quản lý permissions trong database.
+Cung cấp các operations CRUD và query permissions của user.
 """
+
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from src.base.database.repository.base import Repository
@@ -9,7 +11,7 @@ from src.auth.database.model.permission import Permission
 
 class PermissionRepository(Repository[Permission]):
     """
-    Repository để truy vấn permissions của user.
+    Repository để quản lý Permission entities.
 
     Args:
         engine (AsyncEngine): SQLAlchemy async engine.
@@ -43,3 +45,33 @@ class PermissionRepository(Repository[Permission]):
         """
         results = await self.fetch_sql(sql, {"user_id": user_id})
         return {row["code"] for row in results}
+
+    async def get_by_code(self, code: str) -> Permission | None:
+        """
+        Tìm permission theo code.
+
+        Args:
+            code (str): Permission code cần tìm (e.g. "book:read").
+
+        Returns:
+            Permission | None: Permission nếu tìm thấy, None nếu không.
+        """
+        sql = "SELECT * FROM permissions WHERE code = :code"
+        results = await self.fetch_sql(sql, {"code": code})
+        if not results:
+            return None
+        return Permission(**dict(results[0]))
+
+    async def delete(self, permission_id: int) -> bool:
+        """
+        Xóa permission theo id.
+
+        Args:
+            permission_id (int): ID của permission cần xóa.
+
+        Returns:
+            bool: True nếu xóa thành công.
+        """
+        sql = "DELETE FROM permissions WHERE id = :permission_id"
+        row_count = await self.execute_sql(sql, {"permission_id": permission_id})
+        return row_count > 0

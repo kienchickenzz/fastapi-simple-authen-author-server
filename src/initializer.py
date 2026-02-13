@@ -28,6 +28,8 @@ from src.user.user_module import UserModule
 from src.auth.auth_module import AuthModule
 from src.book.book_module import BookModule
 from src.health.health_module import HealthModule
+from src.permission.permission_module import PermissionModule
+from src.role.role_module import RoleModule
 
 
 class AppState(State):
@@ -47,6 +49,8 @@ class AppState(State):
     token_service: Any
     book_service: Any
     health_check_service: Any
+    permission_service: Any
+    role_service: Any
 
     # Repositories
     user_repository: Any
@@ -54,6 +58,8 @@ class AppState(State):
     permission_repository: Any
     book_repository: Any
     health_check_repository: Any
+    role_repository: Any
+    role_permission_repository: Any
 
 
 class AppInitializer(Initializer):
@@ -80,26 +86,35 @@ class AppInitializer(Initializer):
         #
         # Quy tắc:
         # 1. Modules độc lập (không phụ thuộc module khác) có thể đặt
-        #    ở bất kỳ vị trí nào
+        #    ở bất kỳ vị trí nào trong nhóm độc lập
         # 2. Modules có dependencies PHẢI đặt SAU modules mà nó phụ thuộc
         #
-        # Ví dụ hiện tại:
-        # - UserModule: Độc lập, có thể đặt bất kỳ đâu
-        # - AuthModule: Phụ thuộc UserRepository -> PHẢI sau UserModule
+        # Dependency Graph hiện tại:
+        # - UserModule: Độc lập
         # - BookModule: Độc lập
         # - HealthModule: Độc lập
+        # - PermissionModule: Độc lập
+        # - RoleModule: Phụ thuộc PermissionModule (cần permission_repository)
+        # - AuthModule: Phụ thuộc UserModule (cần user_repository)
+        #               + PermissionModule đã đăng ký permission_repository
         #
         # Nếu thêm module mới có dependencies, hãy cập nhật thứ tự này!
         # =================================================================
         self._modules: list[IModule] = [
             # --- Modules độc lập (khởi tạo trước) ---
-            UserModule(),    # Cung cấp: user_repository, user_service
-            BookModule(),    # Cung cấp: book_repository, book_service
-            HealthModule(),  # Cung cấp: health_check_repository, health_check_service
+            UserModule(),       # Cung cấp: user_repository, user_service
+            BookModule(),       # Cung cấp: book_repository, book_service
+            HealthModule(),     # Cung cấp: health_check_repository, health_check_service
+            PermissionModule(), # Cung cấp: permission_repository, permission_service
+                                # PHẢI trước RoleModule và AuthModule
 
             # --- Modules có cross-dependencies (khởi tạo sau) ---
-            AuthModule(),    # Yêu cầu: user_repository (từ UserModule)
-                             # Cung cấp: token_repository, token_service, auth_service
+            RoleModule(),       # Yêu cầu: permission_repository (từ PermissionModule)
+                                # Cung cấp: role_repository, role_permission_repository, role_service
+
+            AuthModule(),       # Yêu cầu: user_repository (từ UserModule)
+                                # permission_repository đã có từ PermissionModule
+                                # Cung cấp: token_repository, token_service, auth_service
         ]
 
     async def __aenter__(self) -> AppState:

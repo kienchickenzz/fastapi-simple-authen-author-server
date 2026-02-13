@@ -36,7 +36,9 @@ SELECT r.id, p.id
 FROM roles r
 JOIN permissions p ON p.code IN (
     'user:read', 'user:create', 'user:update', 'user:delete',
-    'book:read', 'book:create', 'book:update', 'book:delete'
+    'book:read', 'book:create', 'book:update', 'book:delete',
+    'permission:read', 'permission:create', 'permission:update', 'permission:delete',
+    'role:read', 'role:create', 'role:update', 'role:delete'
 )
 WHERE r.name = 'admin'
 ON CONFLICT DO NOTHING;
@@ -52,24 +54,6 @@ ON CONFLICT DO NOTHING;
 
 
 -- ----------
--- User role
--- ----------
-INSERT INTO user_roles (user_id, role_id)
-SELECT u.id, r.id
-FROM users u
-JOIN roles r ON r.name = 'admin'
-WHERE u.username = 'admin'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO user_roles (user_id, role_id)
-SELECT u.id, r.id
-FROM users u
-JOIN roles r ON r.name = 'user'
-WHERE u.username = 'user'
-ON CONFLICT DO NOTHING;
-
-
--- ----------
 -- User
 -- ----------
 INSERT INTO users (username, email, password_hash, is_active)
@@ -80,6 +64,10 @@ VALUES
     ('user2',  'user2@example.com',  'hashed_password', true)
 ON CONFLICT (username) DO NOTHING;
 
+
+-- ----------
+-- User role
+-- ----------
 INSERT INTO user_roles (user_id, role_id)
 SELECT u.id, r.id
 FROM users u
@@ -93,4 +81,3 @@ FROM users u
 JOIN roles r ON r.name = 'user'
 WHERE u.username IN ('user1', 'user2')
 ON CONFLICT DO NOTHING;
-
