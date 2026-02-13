@@ -11,6 +11,7 @@ from src.user.dto.user_dto import (
     UserCreateRequest,
     UserUpdateRequest,
     UserListRequest,
+    UserRoleAssignRequest,
 )
 from src.user.service.user_service import UserService
 from src.user.doc import Tags
@@ -144,4 +145,90 @@ async def delete_user(
         user_service (UserService): Service xử lý user.
     """
     await user_service.delete(user_id)
+    return None
+
+
+# =============================================================================
+# User-Role Endpoints
+# =============================================================================
+
+@router.get(
+    path="/{user_id}/roles",
+    summary="Get User Roles",
+    description="Get all roles assigned to a user",
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_roles(
+    user_id: int,
+    _: TokenPayload = Depends(require_permissions("user:read")),
+    user_service: UserService = Injects("user_service"),
+) -> JSONResponse:
+    """
+    Lấy danh sách roles của user.
+
+    Args:
+        user_id (int): ID của user.
+        _ (TokenPayload): Token payload (cần permission user:read).
+        user_service (UserService): Service xử lý user.
+
+    Returns:
+        JSONResponse: Danh sách roles của user.
+    """
+    result = await user_service.get_roles(user_id)
+    return JSONResponse(content=result.model_dump(mode="json"), status_code=200)
+
+
+@router.post(
+    path="/{user_id}/roles",
+    summary="Assign Role to User",
+    description="Assign a role to a user",
+    status_code=status.HTTP_201_CREATED,
+)
+async def assign_user_role(
+    user_id: int,
+    request: UserRoleAssignRequest,
+    _: TokenPayload = Depends(require_permissions("user:update")),
+    user_service: UserService = Injects("user_service"),
+) -> JSONResponse:
+    """
+    Gán role cho user.
+
+    Args:
+        user_id (int): ID của user.
+        request (UserRoleAssignRequest): Request chứa role_id cần gán.
+        _ (TokenPayload): Token payload (cần permission user:update).
+        user_service (UserService): Service xử lý user.
+
+    Returns:
+        JSONResponse: Message xác nhận.
+    """
+    await user_service.assign_role(user_id, request.role_id)
+    return JSONResponse(
+        content={"message": "Role assigned successfully"},
+        status_code=201,
+    )
+
+
+@router.delete(
+    path="/{user_id}/roles/{role_id}",
+    summary="Remove Role from User",
+    description="Remove a role from a user",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_user_role(
+    user_id: int,
+    role_id: int,
+    _: TokenPayload = Depends(require_permissions("user:update")),
+    user_service: UserService = Injects("user_service"),
+) -> None:
+    """
+    Xóa role khỏi user.
+
+    Args:
+        user_id (int): ID của user.
+        role_id (int): ID của role cần xóa.
+        _ (TokenPayload): Token payload (cần permission user:update).
+        user_service (UserService): Service xử lý user.
+    """
+    await user_service.remove_role(user_id, role_id)
     return None

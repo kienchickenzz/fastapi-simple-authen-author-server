@@ -30,6 +30,7 @@ from src.book.book_module import BookModule
 from src.health.health_module import HealthModule
 from src.permission.permission_module import PermissionModule
 from src.role.role_module import RoleModule
+from src.admin.bootstrap import AdminBootstrap
 
 
 class AppState(State):
@@ -90,30 +91,30 @@ class AppInitializer(Initializer):
         # 2. Modules có dependencies PHẢI đặt SAU modules mà nó phụ thuộc
         #
         # Dependency Graph hiện tại:
-        # - UserModule: Độc lập
         # - BookModule: Độc lập
         # - HealthModule: Độc lập
         # - PermissionModule: Độc lập
         # - RoleModule: Phụ thuộc PermissionModule (cần permission_repository)
+        # - UserModule: Phụ thuộc RoleModule (cần role_repository)
         # - AuthModule: Phụ thuộc UserModule (cần user_repository)
-        #               + PermissionModule đã đăng ký permission_repository
         #
         # Nếu thêm module mới có dependencies, hãy cập nhật thứ tự này!
         # =================================================================
         self._modules: list[IModule] = [
             # --- Modules độc lập (khởi tạo trước) ---
-            UserModule(),       # Cung cấp: user_repository, user_service
             BookModule(),       # Cung cấp: book_repository, book_service
             HealthModule(),     # Cung cấp: health_check_repository, health_check_service
             PermissionModule(), # Cung cấp: permission_repository, permission_service
-                                # PHẢI trước RoleModule và AuthModule
+                                # PHẢI trước RoleModule
 
             # --- Modules có cross-dependencies (khởi tạo sau) ---
             RoleModule(),       # Yêu cầu: permission_repository (từ PermissionModule)
                                 # Cung cấp: role_repository, role_permission_repository, role_service
 
+            UserModule(),       # Yêu cầu: role_repository (từ RoleModule)
+                                # Cung cấp: user_repository, user_role_repository, user_service
+
             AuthModule(),       # Yêu cầu: user_repository (từ UserModule)
-                                # permission_repository đã có từ PermissionModule
                                 # Cung cấp: token_repository, token_service, auth_service
         ]
 
@@ -188,7 +189,17 @@ class AppInitializer(Initializer):
             context.shared_repositories.update(deps.repositories)
 
         # =================================================================
-        # BƯỚC 5: Trả về AppState
+        # BƯỚC 5: Bootstrap Admin User
+        # Kiểm tra và tạo admin user từ environment variables nếu:
+        # 1. Chưa có admin nào trong database
+        # 2. Có đủ ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD trong env
+        #
+        # Nếu thiếu config hoặc đã có admin, sẽ skip và log thông tin.
+        # =================================================================
+        await AdminBootstrap.run(db_engine=db_engine, config=self.config)
+
+        # =================================================================
+        # BƯỚC 6: Trả về AppState
         # Merge state từ lớp cha với tất cả dependencies đã thu thập
         # =================================================================
         return AppState(

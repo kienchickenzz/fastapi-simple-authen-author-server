@@ -13,7 +13,19 @@ VALUES
     ('book:read',   'Read book information'),
     ('book:create', 'Create new book'),
     ('book:update', 'Update existing book'),
-    ('book:delete', 'Delete book')
+    ('book:delete', 'Delete book'),
+
+    -- Permission permissions
+    ('permission:read',   'Read permission information'),
+    ('permission:create', 'Create new permission'),
+    ('permission:update', 'Update existing permission'),
+    ('permission:delete', 'Delete permission'),
+
+    -- Role permissions
+    ('role:read',   'Read role information'),
+    ('role:create', 'Create new role'),
+    ('role:update', 'Update existing role'),
+    ('role:delete', 'Delete role')
 
 ON CONFLICT (code) DO NOTHING;
 

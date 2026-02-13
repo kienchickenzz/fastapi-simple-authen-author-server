@@ -84,3 +84,43 @@ class UserListResponse(PaginatedResponseBase):
     """
 
     users: list[UserResponse]
+
+
+# === User-Role DTOs ===
+class UserRoleAssignRequest(BaseModel):
+    """
+    Request gán role cho user.
+
+    Args:
+        role_id (int): ID của role cần gán.
+    """
+
+    role_id: int
+
+
+class UserRoleResponse(ResponseBase):
+    """
+    Response cho single role của user.
+
+    Args:
+        id (int): ID của role.
+        name (str): Tên role.
+        description (str | None): Mô tả role.
+    """
+
+    id: int
+    name: str
+    description: Optional[str]
+
+
+class UserRolesResponse(ResponseBase):
+    """
+    Response cho danh sách roles của một user.
+
+    Args:
+        user_id (int): ID của user.
+        roles (list[UserRoleResponse]): Danh sách roles.
+    """
+
+    user_id: int
+    roles: list[UserRoleResponse]
