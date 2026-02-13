@@ -35,8 +35,8 @@ class UserRepository(Repository[User]):
             User | None: User nếu tìm thấy, None nếu không.
         """
         sql = "SELECT * FROM users WHERE username = :username"
-        results = await self.execute_sql(sql, {"username": username})
-        if not results or isinstance(results, int):
+        results = await self.fetch_sql(sql, {"username": username})
+        if not results:
             return None
         return User(**dict(results[0]))
 
@@ -51,8 +51,8 @@ class UserRepository(Repository[User]):
             User | None: User nếu tìm thấy, None nếu không.
         """
         sql = "SELECT * FROM users WHERE email = :email"
-        results = await self.execute_sql(sql, {"email": email})
-        if not results or isinstance(results, int):
+        results = await self.fetch_sql(sql, {"email": email})
+        if not results:
             return None
         return User(**dict(results[0]))
 
@@ -67,16 +67,5 @@ class UserRepository(Repository[User]):
             bool: True nếu xóa thành công.
         """
         sql = "DELETE FROM users WHERE id = :user_id"
-        row_count = await self.execute_sql(sql, {"user_id": user_id}, fetch=False)
+        row_count = await self.execute_sql(sql, {"user_id": user_id})
         return row_count > 0
-
-    def handle_sql_error(self, error_code: str, error_message: str, exc: Exception) -> None:
-        """
-        Xử lý SQL errors.
-
-        Args:
-            error_code (str): Mã lỗi PostgreSQL.
-            error_message (str): Thông báo lỗi.
-            exc (Exception): Exception gốc.
-        """
-        raise exc

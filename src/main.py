@@ -3,8 +3,8 @@ from os import environ
 from dotenv import load_dotenv
 
 from src.base.app import create_fastapi_app
-from src.base.config import Config
-from src.health.health_initializer import HealthInitializer
+from src.config import Config
+from src.initializer import AppInitializer
 from src.health.endpoint.main import main_router as router_health
 from src.health.doc import Tags as HealthTags
 from src.auth.endpoint.main import main_router as router_auth
@@ -27,7 +27,7 @@ openapi_tags = (
 
 app = create_fastapi_app(
     config=config,
-    initializer=HealthInitializer,
+    initializer=AppInitializer,
     title="Simple Authorization",
     description="FastAPI with RBAC authorization system",
     version="0.1.0",

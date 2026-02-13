@@ -57,7 +57,7 @@ class TokenRepository(Repository[Token]):
             bool: True nếu deactivate thành công.
         """
         sql = "UPDATE tokens SET is_active = FALSE WHERE token = :token AND is_active = TRUE"
-        row_count = await self.execute_sql(sql, {"token": token}, fetch=False)
+        row_count = await self.execute_sql(sql, {"token": token})
         return row_count > 0 if isinstance(row_count, int) else False
 
     async def is_token_active(self, token: str) -> bool:
@@ -77,8 +77,8 @@ class TokenRepository(Repository[Token]):
             AND expired_at > NOW()
             LIMIT 1
         """
-        results = await self.execute_sql(sql, {"token": token})
-        return len(results) > 0 if not isinstance(results, int) else False
+        results = await self.fetch_sql(sql, {"token": token})
+        return len(results) > 0
 
     async def deactivate_all_user_tokens(self, user_id: int) -> int:
         """
@@ -91,7 +91,7 @@ class TokenRepository(Repository[Token]):
             int: Số lượng tokens đã deactivate.
         """
         sql = "UPDATE tokens SET is_active = FALSE WHERE user_id = :user_id AND is_active = TRUE"
-        row_count = await self.execute_sql(sql, {"user_id": user_id}, fetch=False)
+        row_count = await self.execute_sql(sql, {"user_id": user_id})
         return row_count if isinstance(row_count, int) else 0
 
     async def cleanup_expired(self) -> int:
@@ -102,16 +102,5 @@ class TokenRepository(Repository[Token]):
             int: Số lượng tokens đã xóa.
         """
         sql = "DELETE FROM tokens WHERE expired_at < NOW()"
-        row_count = await self.execute_sql(sql, fetch=False)
+        row_count = await self.execute_sql(sql)
         return row_count if isinstance(row_count, int) else 0
-
-    def handle_sql_error(self, error_code: str, error_message: str, exc: Exception) -> None:
-        """
-        Xử lý SQL errors.
-
-        Args:
-            error_code (str): Mã lỗi PostgreSQL.
-            error_message (str): Thông báo lỗi.
-            exc (Exception): Exception gốc.
-        """
-        raise exc

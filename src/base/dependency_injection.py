@@ -27,7 +27,16 @@ def Injects(  # noqa: N802
     ] = True,
 ) -> Any:
     def _inject_from_state(request: Request) -> Any:
-        return getattr(request.state, dependency)
+        # Sử dụng getattr với default=None để tránh exception chaining
+        # từ Starlette State.__getattr__ (KeyError → AttributeError)
+        value = getattr(request.state, dependency, None)
+        if value is None:
+            raise RuntimeError(
+                f"Dependency '{dependency}' not found in request.state. "
+                f"Ensure it is registered in the appropriate Module and "
+                f"added to AppInitializer._modules."
+            )
+        return value
 
     return params.Depends(dependency=_inject_from_state, use_cache=use_cache)
 

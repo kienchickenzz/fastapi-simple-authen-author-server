@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
-from src.base.config import Config
+from src.config import Config
 
 
 class TokenService:

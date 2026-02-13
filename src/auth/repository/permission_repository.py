@@ -41,16 +41,5 @@ class PermissionRepository(Repository[Permission]):
             JOIN user_roles ur ON ur.role_id = rp.role_id
             WHERE ur.user_id = :user_id
         """
-        results = await self.execute_sql(sql, {"user_id": user_id})
+        results = await self.fetch_sql(sql, {"user_id": user_id})
         return {row["code"] for row in results}
-
-    def handle_sql_error(self, error_code: str, error_message: str, exc: Exception) -> None:
-        """
-        Xử lý SQL errors.
-
-        Args:
-            error_code (str): Mã lỗi PostgreSQL.
-            error_message (str): Thông báo lỗi.
-            exc (Exception): Exception gốc.
-        """
-        raise exc

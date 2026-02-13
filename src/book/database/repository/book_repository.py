@@ -35,8 +35,8 @@ class BookRepository(Repository[Book]):
             Book | None: Book nếu tìm thấy, None nếu không.
         """
         sql = "SELECT * FROM books WHERE isbn = :isbn"
-        results = await self.execute_sql(sql, {"isbn": isbn})
-        if not results or isinstance(results, int):
+        results = await self.fetch_sql(sql, {"isbn": isbn})
+        if not results:
             return None
         return Book(**dict(results[0]))
 
@@ -51,16 +51,5 @@ class BookRepository(Repository[Book]):
             bool: True nếu xóa thành công.
         """
         sql = "DELETE FROM books WHERE id = :book_id"
-        row_count = await self.execute_sql(sql, {"book_id": book_id}, fetch=False)
+        row_count = await self.execute_sql(sql, {"book_id": book_id})
         return row_count > 0
-
-    def handle_sql_error(self, error_code: str, error_message: str, exc: Exception) -> None:
-        """
-        Xử lý SQL errors.
-
-        Args:
-            error_code (str): Mã lỗi PostgreSQL.
-            error_message (str): Thông báo lỗi.
-            exc (Exception): Exception gốc.
-        """
-        raise exc
