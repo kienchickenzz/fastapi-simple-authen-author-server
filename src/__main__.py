@@ -21,6 +21,7 @@ _logger_factory = LoggerFactory(_logger_config)
 logger = _logger_factory.get_instance()
 
 
+# TODO: Bootstrap với SQL script để seed dữ liệu trước khi tạo admin
 def run_server(args: argparse.Namespace) -> None:
     """
     Khởi chạy FastAPI server với uvicorn.
