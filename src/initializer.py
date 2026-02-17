@@ -33,6 +33,7 @@ from src.role.role_module import RoleModule
 from src.admin.bootstrap import AdminBootstrap
 
 
+# TODO: Thêm kiểu dữ liệu để định nghĩa rõ ràng hơn các service và repository trong AppState
 class AppState(State):
     """
     Application state chứa tất cả services và repositories.
