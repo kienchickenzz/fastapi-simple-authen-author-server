@@ -32,8 +32,29 @@ from src.permission.permission_module import PermissionModule
 from src.role.role_module import RoleModule
 from src.admin.bootstrap import AdminBootstrap
 
+# =============================================================================
+# IMPORT SERVICES
+# =============================================================================
+from src.user.service.user_service import UserService
+from src.auth.service.auth_service import AuthService
+from src.auth.service.token_service import TokenService
+from src.book.service.book_service import BookService
+from src.health.service.health_check import HealthCheckService
+from src.permission.service.permission_service import PermissionService
+from src.role.service.role_service import RoleService
 
-# TODO: Thêm kiểu dữ liệu để định nghĩa rõ ràng hơn các service và repository trong AppState
+# =============================================================================
+# IMPORT REPOSITORIES
+# =============================================================================
+from src.user.database.repository.user_repository import UserRepository
+from src.auth.database.repository.token_repository import TokenRepository
+from src.permission.database.repository.permission_repository import PermissionRepository
+from src.book.database.repository.book_repository import BookRepository
+from src.health.database.repository.health import HealthCheckRepository
+from src.role.database.repository.role_repository import RoleRepository
+from src.role.database.repository.role_permission_repository import RolePermissionRepository
+
+
 class AppState(State):
     """
     Application state chứa tất cả services và repositories.
@@ -46,22 +67,22 @@ class AppState(State):
     db_engine: AsyncEngine
 
     # Services
-    user_service: Any
-    auth_service: Any
-    token_service: Any
-    book_service: Any
-    health_check_service: Any
-    permission_service: Any
-    role_service: Any
+    user_service: UserService
+    auth_service: AuthService
+    token_service: TokenService
+    book_service: BookService
+    health_check_service: HealthCheckService
+    permission_service: PermissionService
+    role_service: RoleService
 
     # Repositories
-    user_repository: Any
-    token_repository: Any
-    permission_repository: Any
-    book_repository: Any
-    health_check_repository: Any
-    role_repository: Any
-    role_permission_repository: Any
+    user_repository: UserRepository
+    token_repository: TokenRepository
+    permission_repository: PermissionRepository
+    book_repository: BookRepository
+    health_check_repository: HealthCheckRepository
+    role_repository: RoleRepository
+    role_permission_repository: RolePermissionRepository
 
 
 class AppInitializer(Initializer):
