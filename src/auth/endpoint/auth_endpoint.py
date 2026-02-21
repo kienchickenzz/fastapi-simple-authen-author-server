@@ -17,6 +17,8 @@ router = APIRouter(tags=[Tags.AUTH], prefix="/auth")
 security = HTTPBearer()
 
 
+# TODO: Thêm endpoint refresh token, change password, forgot password, v.v. 
+# TODO: Thêm DTO vào docstring của endpoint để rõ ràng hơn
 @router.post(
     path="/sign-up",
     summary="Sign Up",

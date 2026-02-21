@@ -92,6 +92,7 @@ class AuthService:
             raise InvalidTokenException("User is inactive")
 
         # Tạo JWT token
+        # TODO: Thêm claims như permissions vào token, hiện tại chỉ có user_id
         access_token = self._token_service.encode(user.id)
         expired_at = self._token_service.get_expiration(access_token)
 

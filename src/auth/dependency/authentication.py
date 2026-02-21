@@ -50,6 +50,7 @@ async def get_current_user(
     except jwt.InvalidTokenError:
         raise InvalidTokenException()
 
+    # TODO: Thêm permission vào token để tránh phải query database mỗi lần xác thực, hiện tại vẫn query để lấy permissions
     permissions = await permission_repository.get_permissions_by_user_id(user_id)
 
     return TokenPayload(user_id=user_id, permissions=permissions)
