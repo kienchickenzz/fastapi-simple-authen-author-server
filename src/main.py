@@ -1,3 +1,12 @@
+"""
+Entry point của FastAPI application.
+
+Module này khởi tạo FastAPI app với các cấu hình:
+- Load environment variables từ .env
+- Setup AppInitializer để quản lý lifecycle
+- Register tất cả routers từ các modules (health, ...)
+- Cấu hình OpenAPI documentation với tags từ các modules
+"""
 from os import environ
 
 from dotenv import load_dotenv
@@ -18,10 +27,12 @@ from src.permission.doc import Tags as PermissionTags
 from src.role.endpoint.main import main_router as router_role
 from src.role.doc import Tags as RoleTags
 
+
+# Load environment variables
 load_dotenv('.env')
 config = Config(environ)
 
-# Combine all OpenAPI tags
+# Combine OpenAPI tags từ tất cả modules
 openapi_tags = (
     HealthTags.get_docs()
     + AuthTags.get_docs()
@@ -31,6 +42,7 @@ openapi_tags = (
     + RoleTags.get_docs()
 )
 
+# Khởi tạo FastAPI application
 app = create_fastapi_app(
     config=config,
     initializer=AppInitializer,
@@ -42,7 +54,7 @@ app = create_fastapi_app(
     openapi_tags=openapi_tags,
 )
 
-# Service routes
+# Register routers từ các modules
 app.include_router(router_health)
 app.include_router(router_auth)
 app.include_router(router_user)

@@ -1,9 +1,13 @@
+"""
+Module quản lý việc tạo và quản lý database engines.
+Cung cấp EngineFactory để tạo async SQLAlchemy engines với cấu hình phù hợp.
+"""
 from threading import Lock
 from types import TracebackType
 from typing import Dict, Optional, Type
 from uuid import uuid4
 
-from asyncpg import Connection # type: ignore[import]
+from asyncpg import Connection  # type: ignore[import]
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
@@ -48,20 +52,52 @@ class EngineFactory:
     """
 
     def __init__(self, *, config: Config):
+        """
+        Khởi tạo EngineFactory.
+
+        Args:
+            config (Config): Config instance để đọc database credentials.
+        """
         self._config = config
         self._engine_init_lock: Lock = Lock()
         self._engines: Dict[str, AsyncEngine] = {}
 
     async def __aenter__(self) -> "EngineFactory":
+        """
+        Async context manager entry point.
+
+        Returns:
+            EngineFactory: Self instance.
+        """
         return self
 
     async def __aexit__(
         self, exc_type: Optional[Type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> None:
+        """
+        Async context manager exit point. Dispose tất cả engines.
+
+        Args:
+            exc_type (Optional[Type[BaseException]]): Exception type nếu có.
+            exc_val (Optional[BaseException]): Exception value nếu có.
+            exc_tb (Optional[TracebackType]): Traceback nếu có.
+        """
         for database_identifier, engine in self._engines.items():
             await engine.dispose()
 
     def create_engine(self, database_identifier: str) -> AsyncEngine:
+        """
+        Tạo hoặc lấy engine đã tồn tại cho database identifier.
+
+        Thread-safe method đảm bảo chỉ tạo một engine cho mỗi identifier.
+
+        Args:
+            database_identifier (str): Prefix để tìm config
+                (e.g., "DB" sẽ tìm DB_HOST, DB_PORT, ...).
+
+        Returns:
+            AsyncEngine: SQLAlchemy async engine instance.
+        """
         with self._engine_init_lock:
             if database_identifier not in self._engines:
                 self._engines[database_identifier] = self._create_no_pool_engine(database_identifier.upper())
@@ -69,6 +105,19 @@ class EngineFactory:
         return self._engines[database_identifier]
 
     def _create_no_pool_engine(self, database_identifier: str) -> AsyncEngine:
+        """
+        Tạo async engine không sử dụng connection pool.
+
+        Engine được cấu hình để tương thích với pgbouncer trong
+        transaction/statement pool mode bằng cách disable prepared statements.
+
+        Args:
+            database_identifier (str): Prefix để tìm config
+                (e.g., "DB" sẽ tìm DB_HOST, DB_PORT, ...).
+
+        Returns:
+            AsyncEngine: SQLAlchemy async engine với NullPool.
+        """
         db_host = self._config.require_config(f"{database_identifier}_HOST")
         db_port = self._config.require_config(f"{database_identifier}_PORT")
         db_name = self._config.require_config(f"{database_identifier}_NAME")
@@ -97,5 +146,21 @@ class EngineFactory:
 # Necessary hack to handle data-platform no pooling configuration,
 # see https://github.com/sqlalchemy/sqlalchemy/issues/6467#issuecomment-864943824
 class _CConnection(Connection):
+    """
+    Custom Connection class để xử lý unique ID generation.
+
+    Workaround cho vấn đề với asyncpg và SQLAlchemy khi
+    không sử dụng connection pooling.
+    """
+
     def _get_unique_id(self, prefix: str) -> str:
+        """
+        Tạo unique ID cho prepared statements.
+
+        Args:
+            prefix (str): Prefix cho unique ID.
+
+        Returns:
+            str: Unique ID string với format __asyncpg_{prefix}_{uuid}__.
+        """
         return f"__asyncpg_{prefix}_{uuid4()}__"

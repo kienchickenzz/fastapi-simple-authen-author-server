@@ -20,6 +20,12 @@ class HealthCheckRepository(Repository[HealthCheck]):
     """
 
     def __init__(self, engine: AsyncEngine):
+        """
+        Khởi tạo HealthCheckRepository.
+
+        Args:
+            engine (AsyncEngine): SQLAlchemy async engine.
+        """
         super().__init__(engine, HealthCheck)
 
 
