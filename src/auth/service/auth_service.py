@@ -1,5 +1,9 @@
 """
 Service xử lý authentication logic.
+
+AuthService là trung tâm xử lý sign-up, sign-in, sign-out.
+Khi sign-in, permissions của user được fetch và embed vào JWT token
+để resource servers có thể authorize mà không cần query database.
 """
 import hashlib
 
@@ -14,6 +18,7 @@ from src.auth.service.token_service import TokenService
 from src.auth.database.repository.token_repository import TokenRepository
 from src.auth.exception.auth_exception import InvalidTokenException
 from src.user.database.repository.user_repository import UserRepository
+from src.permission.database.repository.permission_repository import PermissionRepository
 
 
 class AuthService:
@@ -24,6 +29,7 @@ class AuthService:
         user_repository (UserRepository): Repository để truy cập users.
         token_service (TokenService): Service để tạo/verify JWT.
         token_repository (TokenRepository): Repository để quản lý tokens.
+        permission_repository (PermissionRepository): Repository để query permissions.
     """
 
     def __init__(
@@ -31,6 +37,7 @@ class AuthService:
         user_repository: UserRepository,
         token_service: TokenService,
         token_repository: TokenRepository,
+        permission_repository: PermissionRepository,
     ):
         """
         Khởi tạo AuthService.
@@ -39,10 +46,12 @@ class AuthService:
             user_repository (UserRepository): Repository để truy cập users.
             token_service (TokenService): Service để tạo/verify JWT.
             token_repository (TokenRepository): Repository để quản lý tokens.
+            permission_repository (PermissionRepository): Repository để query permissions.
         """
         self._user_repository = user_repository
         self._token_service = token_service
         self._token_repository = token_repository
+        self._permission_repository = permission_repository
 
     async def sign_up(self, request: SignUpRequest) -> SignUpResponse:
         """
@@ -70,13 +79,13 @@ class AuthService:
 
     async def sign_in(self, request: SignInRequest) -> SignInResponse:
         """
-        Đăng nhập và trả về JWT token.
+        Đăng nhập và trả về JWT token với permissions embedded.
 
         Args:
             request (SignInRequest): Thông tin đăng nhập.
 
         Returns:
-            SignInResponse: Access token.
+            SignInResponse: Access token chứa user info và permissions.
 
         Raises:
             InvalidTokenException: Khi credentials không hợp lệ.
@@ -91,9 +100,15 @@ class AuthService:
         if not user.is_active:
             raise InvalidTokenException("User is inactive")
 
-        # Tạo JWT token
-        # TODO: Thêm claims như permissions vào token, hiện tại chỉ có user_id
-        access_token = self._token_service.encode(user.id)
+        # Fetch permissions của user (chỉ query DB 1 lần lúc sign-in)
+        permission_codes = await self._permission_repository.get_permissions_by_user_id(user.id)
+
+        # Tạo JWT token với permissions embedded
+        access_token = self._token_service.encode(
+            user_id=user.id,
+            username=user.username,
+            permissions=list(permission_codes),
+        )
         expired_at = self._token_service.get_expiration(access_token)
 
         # Lưu token vào database với trạng thái active

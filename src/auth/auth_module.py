@@ -28,11 +28,12 @@ class AuthModule(IModule):
         - auth_service: AuthService instance
 
     Cross-module dependencies (lấy từ shared_repositories):
-        - user_repository: Từ UserModule
-        - permission_repository: Từ PermissionModule (đã đăng ký, dùng cho authentication)
+        - user_repository: Từ UserModule (để xác thực credentials)
+        - permission_repository: Từ PermissionModule (để fetch permissions khi sign-in)
 
-    LƯU Ý: AuthModule không đăng ký permission_repository vì PermissionModule
-    đã làm điều đó. AuthModule chỉ cần đảm bảo PermissionModule khởi tạo trước.
+    LƯU Ý: AuthService cần permission_repository để embed permissions vào JWT token
+    khi user sign-in. Điều này cho phép resource servers authorize mà không cần
+    query database.
     """
 
     _token_repository: TokenRepository | None = None
@@ -65,9 +66,7 @@ class AuthModule(IModule):
         # UserModule và PermissionModule phải được khởi tạo trước AuthModule
         # =================================================================
         user_repository = context.shared_repositories["user_repository"]
-        # permission_repository đã được PermissionModule đăng ký,
-        # không cần lấy ra ở đây vì AuthService không cần nó trực tiếp.
-        # Tuy nhiên, authentication dependency cần nó và đã được inject qua Injects().
+        permission_repository = context.shared_repositories["permission_repository"]
 
         # Khởi tạo repositories của module này
         self._token_repository = TokenRepository(engine=context.db_engine)
@@ -76,11 +75,13 @@ class AuthModule(IModule):
         # TokenService chỉ cần config (cho JWT secret)
         self._token_service = TokenService(config=context.config)
 
-        # AuthService cần UserRepository (cross-module) và các dependencies local
+        # AuthService cần UserRepository và PermissionRepository (cross-module)
+        # để fetch permissions khi sign-in và embed vào JWT token
         self._auth_service = AuthService(
             user_repository=user_repository,
             token_service=self._token_service,
             token_repository=self._token_repository,
+            permission_repository=permission_repository,
         )
 
         return ModuleDependencies(
