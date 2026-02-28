@@ -10,14 +10,12 @@ from src.config import Config
 
 
 from src.base.database.model.base import Base
-from src.health.database.model.health_check import HealthCheck
 from src.auth.database.model.user import User
 from src.auth.database.model.role import Role
 from src.auth.database.model.permission import Permission
 from src.auth.database.model.user_role import UserRole
 from src.auth.database.model.role_permission import RolePermission
 from src.auth.database.model.token import Token
-from src.book.database.model.book import Book
 
 
 from os import environ

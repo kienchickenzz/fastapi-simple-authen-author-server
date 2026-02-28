@@ -26,8 +26,6 @@ from src.base.module import IModule, ModuleContext
 # =============================================================================
 from src.user.user_module import UserModule
 from src.auth.auth_module import AuthModule
-from src.book.book_module import BookModule
-from src.health.health_module import HealthModule
 from src.permission.permission_module import PermissionModule
 from src.role.role_module import RoleModule
 from src.admin.bootstrap import AdminBootstrap
@@ -38,8 +36,6 @@ from src.admin.bootstrap import AdminBootstrap
 from src.user.service.user_service import UserService
 from src.auth.service.auth_service import AuthService
 from src.auth.service.token_service import TokenService
-from src.book.service.book_service import BookService
-from src.health.service.health_check import HealthCheckService
 from src.permission.service.permission_service import PermissionService
 from src.role.service.role_service import RoleService
 
@@ -49,8 +45,6 @@ from src.role.service.role_service import RoleService
 from src.user.database.repository.user_repository import UserRepository
 from src.auth.database.repository.token_repository import TokenRepository
 from src.permission.database.repository.permission_repository import PermissionRepository
-from src.book.database.repository.book_repository import BookRepository
-from src.health.database.repository.health import HealthCheckRepository
 from src.role.database.repository.role_repository import RoleRepository
 from src.role.database.repository.role_permission_repository import RolePermissionRepository
 
@@ -70,8 +64,6 @@ class AppState(State):
     user_service: UserService
     auth_service: AuthService
     token_service: TokenService
-    book_service: BookService
-    health_check_service: HealthCheckService
     permission_service: PermissionService
     role_service: RoleService
 
@@ -79,8 +71,6 @@ class AppState(State):
     user_repository: UserRepository
     token_repository: TokenRepository
     permission_repository: PermissionRepository
-    book_repository: BookRepository
-    health_check_repository: HealthCheckRepository
     role_repository: RoleRepository
     role_permission_repository: RolePermissionRepository
 
@@ -113,8 +103,6 @@ class AppInitializer(Initializer):
         # 2. Modules có dependencies PHẢI đặt SAU modules mà nó phụ thuộc
         #
         # Dependency Graph hiện tại:
-        # - BookModule: Độc lập
-        # - HealthModule: Độc lập
         # - PermissionModule: Độc lập
         # - RoleModule: Phụ thuộc PermissionModule (cần permission_repository)
         # - UserModule: Phụ thuộc RoleModule (cần role_repository)
@@ -124,8 +112,6 @@ class AppInitializer(Initializer):
         # =================================================================
         self._modules: list[IModule] = [
             # --- Modules độc lập (khởi tạo trước) ---
-            BookModule(),       # Cung cấp: book_repository, book_service
-            HealthModule(),     # Cung cấp: health_check_repository, health_check_service
             PermissionModule(), # Cung cấp: permission_repository, permission_service
                                 # PHẢI trước RoleModule
 
