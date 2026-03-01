@@ -11,9 +11,11 @@ from os import environ
 
 from dotenv import load_dotenv
 
-from src.base.app import create_fastapi_app
 from src.config import Config
+
+from src.base.app import create_fastapi_app
 from src.initializer import AppInitializer
+
 from src.auth.endpoint.main import main_router as router_auth
 from src.auth.doc import Tags as AuthTags
 from src.user.endpoint.main import main_router as router_user
