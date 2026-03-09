@@ -20,5 +20,3 @@ async def get_docs() -> RedirectResponse:
         RedirectResponse: Redirect 307 đến /docs.
     """
     return RedirectResponse(url="/docs")
-
-
