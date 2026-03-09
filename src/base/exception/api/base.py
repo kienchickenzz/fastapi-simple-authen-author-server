@@ -3,7 +3,7 @@ Module định nghĩa base exceptions cho REST API.
 Cung cấp HTTPException với support cho OpenAPI documentation.
 """
 from http import HTTPStatus
-from typing import Any, Dict, Type
+from typing import Any, Type
 
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
@@ -90,7 +90,7 @@ class HTTPException(Exception):
         return JSONResponse(self.payload.dict(), status_code=self.status, headers=None)
 
     @classmethod
-    def get_description(cls) -> Dict[int, Any]:
+    def get_description(cls) -> dict[int | str, dict[str, Any]]:
         """
         Expose exception trong Swagger thông qua OpenAPI definitions.
 
@@ -98,7 +98,7 @@ class HTTPException(Exception):
         possible error responses trong API documentation.
 
         Returns:
-            Dict[int, Any]: Dictionary với Pydantic model mô tả exception.
+            dict[int | str, dict[str, Any]]: Dictionary với Pydantic model mô tả exception.
 
         Example:
             >>> @router.get("/users/{id}", responses=NotFoundException.get_description())
